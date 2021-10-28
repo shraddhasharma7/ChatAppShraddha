@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "60695150480",
+    "project_id": "fan-app-shraddha",
+    "storage_bucket": "fan-app-shraddha.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:60695150480:android:6c8ef9c62be5177d59bd15",
+        "android_client_info": {
+          "package_name": "com.example.fan_app_shraddha"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "60695150480-591babau9aiieerrqns4t241q435hvtm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fan_app_shraddha",
+            "certificate_hash": "5703681ea91977a7b5a0440080605f6e64e93b02"
+          }
+        },
+        {
+          "client_id": "60695150480-nh0ad0vqrtb01876cmgum3s4ip3kh1e6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGAqU2IOe-apyLqbWRkRVM2gI1ZeJJXtY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "60695150480-nh0ad0vqrtb01876cmgum3s4ip3kh1e6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
