@@ -35,6 +35,7 @@ dependencies:
   #country_code_picker: ^1.1.7
   #pin_view: ^1.0.1
   sms_autofill: ^1.2.6
+  bubble: ^1.1.9+1
   
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

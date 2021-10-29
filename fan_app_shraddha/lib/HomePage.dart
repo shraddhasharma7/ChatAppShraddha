@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:io' as io;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fan_app_shraddha/profile.dart';
+import 'userListScrreen.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -148,7 +149,37 @@ class _HomePageState extends State<HomePage> {
         });
   }
 
+// create convo
+  void createNewConvo(BuildContext context) {
+    // Navigator.of(context).push<dynamic>(MaterialPageRoute<dynamic>(
+    // builder: (BuildContext context) => NewMessageProvider()));
+  }
+
   @override
+  Widget build(BuildContext context) {
+    //final FirebaseUser firebaseUser = Provider.of<FirebaseUser>(context);
+    return Scaffold(
+      appBar: AppBar(
+          title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          IconButton(
+              onPressed: showSignoutAlert,
+              icon: Icon(Icons.first_page, size: 30)),
+          Text(user.displayName, style: TextStyle(fontSize: 18)),
+          IconButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => userListScrreen()));
+              },
+              icon: Icon(Icons.add, size: 30))
+        ],
+      )),
+      body: Column(children: <Widget>[]),
+    );
+  }
+  /*
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
@@ -259,5 +290,5 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                 ),
               ));
-  }
+  }*/
 }

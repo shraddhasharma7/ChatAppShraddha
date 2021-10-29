@@ -7,6 +7,7 @@ import 'Start.dart';
 import 'package:fan_app_shraddha/Login.dart';
 import 'package:fan_app_shraddha/SignUp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'userListScrreen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
