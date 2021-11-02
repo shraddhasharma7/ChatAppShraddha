@@ -3,18 +3,30 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import 'ChatScreen.dart';
+import 'DatabaseMethods.dart';
+import 'Profile.dart';
+
 class userListScrreen extends StatefulWidget {
   @override
   _userListScrreenState createState() => _userListScrreenState();
 }
 
 class _userListScrreenState extends State<userListScrreen> {
+  getChatRoomIdByUsernames(String a, String b) {
+    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          // title: const Text('Navigate to a new screen on Button click'),
-          backgroundColor: Colors.blueAccent),
+        title: Text("User List Screen"),
+      ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -37,6 +49,13 @@ class _userListScrreenState extends State<userListScrreen> {
                 itemBuilder: (context, index) {
                   var product = usee_list[index]['profile_pic'];
                   return GestureDetector(
+                    onTap: (() {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Profile(
+                                  userData: snapshot.data!.docs[index])));
+                    }),
                     child: Card(
                       elevation: 2,
                       child: Container(

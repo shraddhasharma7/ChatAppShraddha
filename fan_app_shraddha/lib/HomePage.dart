@@ -10,6 +10,9 @@ import 'package:uuid/uuid.dart';
 import 'dart:io' as io;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fan_app_shraddha/profile.dart';
+import 'ChatScreen.dart';
+import 'DatabaseMethods.dart';
+import 'SearchUsers.dart';
 import 'userListScrreen.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,6 +24,11 @@ class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late User user;
   bool isloggedin = false;
+
+  bool isSearching = false;
+
+  TextEditingController searchUserNameEditingController =
+      TextEditingController();
 
   checkAuthentification() async {
     _auth.authStateChanges().listen((user) async {
@@ -80,6 +88,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     this.checkAuthentification();
     this.getUser();
+    onScreenLoaded();
   }
 
   TextEditingController _textFieldController = TextEditingController();
@@ -149,146 +158,251 @@ class _HomePageState extends State<HomePage> {
         });
   }
 
-// create convo
-  void createNewConvo(BuildContext context) {
-    // Navigator.of(context).push<dynamic>(MaterialPageRoute<dynamic>(
-    // builder: (BuildContext context) => NewMessageProvider()));
+  ///////
+  getChatRoomIdByUsernames(String a, String b) {
+    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
+  }
+
+  Widget chatRoomsList() {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance
+          .collection("chatrooms")
+          .orderBy("lastMessageSendTs", descending: true)
+          .where("users", arrayContains: this.user.displayName)
+          .snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        return snapshot.hasData
+            ? Expanded(
+                child: ListView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      DocumentSnapshot ds = snapshot.data!.docs[index];
+                      return ChatRoomListTile(
+                          ds["lastMessage"], ds.id, this.user.displayName);
+                    }),
+              )
+            : Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  getChatRooms() async {
+    chatRoomsList();
+    setState(() {});
+  }
+
+  onScreenLoaded() async {
+    getChatRooms();
   }
 
   @override
   Widget build(BuildContext context) {
     //final FirebaseUser firebaseUser = Provider.of<FirebaseUser>(context);
     return Scaffold(
-      appBar: AppBar(
-          title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          IconButton(
-              onPressed: showSignoutAlert,
-              icon: Icon(Icons.first_page, size: 30)),
-          Text(user.displayName, style: TextStyle(fontSize: 18)),
-          IconButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => userListScrreen()));
-              },
-              icon: Icon(Icons.add, size: 30))
-        ],
-      )),
-      body: Column(children: <Widget>[]),
-    );
-  }
-  /*
-  Widget build(BuildContext context) {
-    return Scaffold(
         appBar: AppBar(
-          title: Text("Home Screen"),
-          actions: <Widget>[
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(primary: Colors.blue),
+            title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            IconButton(
                 onPressed: showSignoutAlert,
-                child: Text(
-                  'Signout',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ))
+                icon: Icon(Icons.first_page, size: 30)),
+            Text(user.displayName, style: TextStyle(fontSize: 18)),
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              SearchUsers(this.user.displayName)));
+                  //Navigator.of(context).push(MaterialPageRoute(
+                  // builder: (context) => userListScrreen()));
+                },
+                icon: Icon(Icons.search, size: 30)),
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => userListScrreen()));
+                  //Navigator.of(context).push(MaterialPageRoute(
+                  // builder: (context) => userListScrreen()));
+                },
+                icon: Icon(Icons.add, size: 30))
           ],
-        ),
-        body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('users')
-              .orderBy('username', descending: false)
-              .snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (!snapshot.hasData) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            } else {
-              snapshot.data!.docs;
-            }
-            var usee_list = snapshot.data!.docs;
+        )),
+        body: Container(
+          margin: EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  isSearching
+                      ? GestureDetector(
+                          onTap: () {
+                            isSearching = false;
+                            searchUserNameEditingController.text = '';
+                            setState(() {});
+                          },
+                          child: Padding(
+                              padding: EdgeInsets.only(right: 12),
+                              child: Icon(Icons.arrow_back)),
+                        )
+                      : Container(),
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.white,
+                              width: 1,
+                              style: BorderStyle.solid),
+                          borderRadius: BorderRadius.circular(24)),
+                      child: Row(
+                        children: [],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              chatRoomsList()
+            ],
+          ),
+        ));
+  }
+}
 
-            return Row(children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: usee_list.length,
-                  itemBuilder: (context, index) {
-                    var product = usee_list[index]['profile_pic'];
-                    return GestureDetector(
-                      onTap: (() {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => Profile(
-                                    userData: snapshot.data!.docs[index])));
-                      }),
-                      child: Card(
-                        elevation: 2,
-                        child: Container(
-                          padding: EdgeInsets.all(15.0),
-                          child: Row(
-                            children: <Widget>[
-                              Flexible(
-                                  //child: Card(
-                                  child: Row(
-                                      //Icon(_icons[index], color: Colors.grey,),
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                    SizedBox(
-                                      width: 15.0,
-                                    ),
-                                    CachedNetworkImage(
-                                        width: 50,
-                                        height: 50,
-                                        imageUrl: usee_list[index]
-                                            ['profile_pic']),
-                                    SizedBox(
-                                      width: 10.0,
-                                    ),
-                                    Text(
-                                      usee_list[index]['username'],
-                                      //style: TextStyle(color: _colors[index]),
-                                    ),
-                                    SizedBox(
-                                      width: 10.0,
-                                    ),
-                                    Text(
-                                      usee_list[index]['date'].toString(),
-                                    ),
-                                    SizedBox(
-                                      width: 5.0,
-                                    ),
-                                  ])
-                                  //)
-                                  )
-                            ],
-                          ),
+class ChatRoomListTile extends StatefulWidget {
+  final String lastMessage, chatRoomId, myUsername;
+  ChatRoomListTile(this.lastMessage, this.chatRoomId, this.myUsername);
+
+  @override
+  _ChatRoomListTileState createState() => _ChatRoomListTileState();
+}
+
+class _ChatRoomListTileState extends State<ChatRoomListTile> {
+  String profilePicUrl = "", name = "", username = "";
+
+  getThisUserInfo() async {
+    username =
+        widget.chatRoomId.replaceAll(widget.myUsername, "").replaceAll("_", "");
+    QuerySnapshot querySnapshot = await DatabaseMethods().getUserInfo(username);
+    // print(
+    //     "something bla bla ${querySnapshot.docs[0].id} ${querySnapshot.docs[0]["username"]}  ${querySnapshot.docs[0]["profile_pic"]}");
+    name = "${querySnapshot.docs[0]["username"]}";
+    profilePicUrl = "${querySnapshot.docs[0]["profile_pic"]}";
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    getThisUserInfo();
+    super.initState();
+  }
+
+  getChatRoomIdByUsernames(String a, String b) {
+    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        var chatRoomId = getChatRoomIdByUsernames(name, widget.myUsername);
+        var chatRoomId1 = getChatRoomIdByUsernames(widget.myUsername, name);
+        Map<String, dynamic> chatRoomInfoMap = {
+          "users": [name, widget.myUsername]
+        };
+
+        Map<String, dynamic> chatRoomInfoMap1 = {
+          "users": [name, widget.myUsername]
+        };
+
+        var chatroom = "";
+        DatabaseMethods().checkWhetherChatRoomExists(chatRoomId).then((value) {
+          if (value) {
+            chatroom = chatRoomId;
+          } else {
+            chatroom = chatRoomId1;
+            DatabaseMethods().createChatRoom(chatroom, chatRoomInfoMap1);
+          }
+          Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ChatScreen(name, widget.myUsername, chatroom)))
+              .then((value) => setState(() {}));
+          // Navigator.push(
+          //     context,
+          //     MaterialPageRoute(
+          //         builder: (context) => ChatScreen(username, name)));
+        });
+      },
+      child: Container(
+          margin: EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: <Widget>[
+                    CircleAvatar(
+                      radius: 30.0,
+                      child: ClipOval(
+                          child: CachedNetworkImage(
+                              width: 100,
+                              height: 100,
+                              imageUrl: profilePicUrl)),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text(
+                                  name,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 20.0),
+                                ),
+                                Text(
+                                  name,
+                                  style: TextStyle(color: Colors.black45),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2.0),
+                              child: Text(
+                                widget.lastMessage,
+                                style: TextStyle(
+                                    color: Colors.black45, fontSize: 16.0),
+                              ),
+                            )
+                          ],
                         ),
                       ),
-                    );
-                  },
+                    )
+                  ],
                 ),
-              )
-            ]);
-          },
-        ),
-        floatingActionButton: !_canShowButton
-            ? const SizedBox.shrink()
-            : FloatingActionButton(
-                onPressed: () {
-                  _textFieldController.text = "";
-                  _displayTextInputDialog(context);
-                },
-                child: Icon(
-                  Icons.add,
-                  color: Colors.white,
-                ),
-              ));
-  }*/
+              ),
+              Divider(),
+            ],
+          )),
+    );
+  }
 }
